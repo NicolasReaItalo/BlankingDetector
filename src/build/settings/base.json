@@ -1,0 +1,6 @@
+{
+    "app_name": "Blanking detector",
+    "author": "Nicolas Rea",
+    "main_module": "src/main/python/main.py",
+    "version": "0.0.0"
+}

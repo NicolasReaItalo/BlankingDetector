@@ -24,7 +24,10 @@ class Window(QtWidgets.QMainWindow,Ui_MainWindow):
         self.show()
 
     def press_file_button(self):
-        pass
+        path = str(QtWidgets.QFileDialog.getOpenFileName()[0])
+        res = self.project.load_video_file(path)
+        self.text_display.setPlainText(res)
+        self.text_display.repaint()
 
 
     def press_analyse_button(self):

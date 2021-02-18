@@ -37,6 +37,9 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.text_display.repaint()
 
     def press_start_button(self):
+        if self.project.video_path == '':
+            self.alert('Choose a video file')
+            return
         self.project.analyse_video()
 
     def top_offset_changed(self):
@@ -53,6 +56,9 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def treshold_changed(self):
         self.project.treshold = self.spb_treshold.value()
+
+    def alert(self,message):
+        self.m = QtWidgets.QMessageBox.about(self,"Attention", message)
 
 
 if __name__ == '__main__':

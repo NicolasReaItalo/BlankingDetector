@@ -2,7 +2,7 @@ from fbs_runtime.application_context.PySide2 import ApplicationContext
 from PySide2.QtWidgets import QMainWindow
 from PySide2 import QtWidgets
 
-import sys
+import sys, os
 
 from package.ui2 import Ui_MainWindow
 from package.videocheck_project import VideoCheck
@@ -40,7 +40,9 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.project.video_path == '':
             self.alert('Choose a video file')
             return
+        self.text_display.setPlainText(f' {os.path.basename(self.project.video_path)} \nAnalysis in progres \n Pres q to stop')
         self.project.analyse_video()
+        print(self.project.issue_list)
 
     def top_offset_changed(self):
         self.project.crop_top = self.spb_top_offset.value()

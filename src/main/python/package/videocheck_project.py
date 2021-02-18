@@ -91,15 +91,67 @@ class VideoCheck():
             image = numpy.frombuffer(raw_image, dtype='uint8')
             image = image.reshape((self.y_res, self.x_res, 3))  # Notice how height is specified first and then width
             resized = cv2.resize(image, (int(self.x_res / scale_factor), int(self.y_res / scale_factor)), 1, 1)
+
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            UpLeftCornerOfText = (0, 50)
+            fontScale = 1
+            fontColor = (255, 255, 255)
+            lineType = 2
+
+            cv2.putText(resized, f'{str(current_frame)}/{self.end_frame}',
+                        UpLeftCornerOfText,
+                        font,
+                        fontScale,
+                        fontColor,
+                        lineType)
+
+
+
             cv2.imshow(f'{os.path.basename(self.video_path)}: Analyse en cours... {self.x_res}x{self.y_res}  Appuyer sur q pour arreter',
                        resized)
 
            ###  INSERER LE CODE DE VERIF ICI
 
+            top_line = image[0 + self.crop_top:1+self.crop_top, 0 + self.crop_left :self.x_res - self.crop_right]
+            bottom_line = image[self.y_res - 1-self.crop_bottom:self.y_res-self.crop_bottom, 0 + self.crop_left:self.x_res- self.crop_right]
+            left_line = image[0 + self.crop_top :self.y_res - self.crop_bottom, 0 + self.crop_left:1 + self.crop_left]
+            right_line = image[0 + self.crop_top:self.y_res - self.crop_bottom, self.x_res - 1 - self.crop_right:self.x_res- self.crop_right]
+
+            black_lines_detected = []
+            if numpy.max(top_line) <= self.treshold:
+                black_lines_detected.append('TOP')
+            if numpy.max(bottom_line) <= self.treshold:
+                black_lines_detected.append('BOTTOM')
+            if numpy.max(left_line) <= self.treshold:
+                black_lines_detected.append('LEFT')
+            if numpy.max(right_line) <= self.treshold:
+                black_lines_detected.append('RIGHT')
+
+            if black_lines_detected != []:
+                if self.issue_list == []:
+                    self.issue_list.append({
+                        'start_frm': current_frame,
+                        'end_frm': current_frame,
+                        'lines_detected': black_lines_detected[:]
+
+                    })
+                else:
+                    if self.issue_list[-1].get('end_frm') == (current_frame - 1):  ## same issue on previous image
+                        self.issue_list[-1]['end_frm'] = current_frame
+                        for item in black_lines_detected:
+                            if item not in self.issue_list[-1]['lines_detected']:
+                                self.issue_list[-1]['lines_detected'].append(item)
+
+                    else: ## new issue
+                        self.issue_list.append({
+                            'start_frm': current_frame,
+                            'end_frm': current_frame,
+                            'lines_detected': black_lines_detected[:]
+
+                        })
+
 
             current_frame += 1
-
-
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break

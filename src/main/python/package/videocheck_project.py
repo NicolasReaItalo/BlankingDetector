@@ -18,13 +18,13 @@ class VideoCheck():
          self.crop_bottom = 0
          self.crop_left = 0
          self.crop_right = 0
-         self.duration = 0
          self.framerate = 0
          self.codec = ''
          self.x_res = 0
          self.y_res = 0
          self.start_frame = 0
          self.end_frame = 0
+         self.treshold = 2
 
     def get_resolution(self):
         if os.path.exists(self.video_path):
@@ -51,19 +51,18 @@ class VideoCheck():
             return metadata.streams[0].codec_description()
         return False
 
-    def get_duration(self):
-        if os.path.exists(self.video_path):
-            metadata = FFProbe(self.video_path)
-            return float(metadata.streams[0].__dict__.get('duration'))
-        return False
-#  A REPARER
+
+
+
     def is_video(self):
+
         if os.path.exists(self.video_path):
             metadata = FFProbe(self.video_path)
-            if metadata.streams[0].is_video():
-                return True
+            if len(metadata.streams) > 0:
+                if metadata.streams[0].is_video():
+                    return True
         return False
-# A REPARER
+
 
     def analyse_video(self):
         if not self.is_video():
@@ -95,28 +94,33 @@ class VideoCheck():
             cv2.imshow(f'{os.path.basename(self.video_path)}: Analyse en cours... {self.x_res}x{self.y_res}  Appuyer sur q pour arreter',
                        resized)
 
+           ###  INSERER LE CODE DE VERIF ICI
+
+
             current_frame += 1
+
+
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
             if current_frame == self.end_frame:
                 break
         pipe.stdout.flush()
-    cv2.destroyAllWindows()
+        cv2.destroyAllWindows()
 
 
     def load_video_file(self, path):
-        # Initiate all the parameters with file Info
-       # if not self.is_video():
-         #   return "Erreur : ce n'est pas un fichier video"
         self.video_path = path
+        if not self.is_video():
+            self.video_path = ''
+            return "Erreur : ce n'est pas un fichier video"
+
         self.x_res, self.y_res = self.get_resolution()
         self.framerate = self.get_framerate()
         self.end_frame = self.get_duration_frames()
-        self.duration = self.get_duration()
         self.codec = self.get_codec()
         return f" {os.path.basename(self.video_path)} \n {self.codec} \n {self.framerate} im.s \n {self.x_res}x{self.y_res} \n " \
-               f"Durée : { self.duration // 60} minutes  / {self.end_frame} images "
+               f"Durée : { timecode.frame_to_tc_02(self.end_frame,self.framerate)}   / {self.end_frame} images "
 
 
 

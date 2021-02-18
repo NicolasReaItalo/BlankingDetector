@@ -1071,6 +1071,7 @@ class Ui_MainWindow(object):
         self.spb_top_offset = QSpinBox(self.centralwidget)
         self.spb_top_offset.setObjectName(u"spb_top_offset")
         self.spb_top_offset.setAlignment(Qt.AlignCenter)
+        self.spb_top_offset.setMaximum(2000)
 
         self.formLayout.setWidget(4, QFormLayout.FieldRole, self.spb_top_offset)
 
@@ -1082,6 +1083,7 @@ class Ui_MainWindow(object):
         self.spb_bottom_offset = QSpinBox(self.centralwidget)
         self.spb_bottom_offset.setObjectName(u"spb_bottom_offset")
         self.spb_bottom_offset.setAlignment(Qt.AlignCenter)
+        self.spb_bottom_offset.setMaximum(2000)
 
         self.formLayout.setWidget(5, QFormLayout.FieldRole, self.spb_bottom_offset)
 
@@ -1093,6 +1095,7 @@ class Ui_MainWindow(object):
         self.spb_left_offset = QSpinBox(self.centralwidget)
         self.spb_left_offset.setObjectName(u"spb_left_offset")
         self.spb_left_offset.setAlignment(Qt.AlignCenter)
+        self.spb_left_offset.setMaximum(2000)
 
         self.formLayout.setWidget(6, QFormLayout.FieldRole, self.spb_left_offset)
 
@@ -1104,6 +1107,7 @@ class Ui_MainWindow(object):
         self.spb_right_offset = QSpinBox(self.centralwidget)
         self.spb_right_offset.setObjectName(u"spb_right_offset")
         self.spb_right_offset.setAlignment(Qt.AlignCenter)
+        self.spb_right_offset.setMaximum(2000)
 
         self.formLayout.setWidget(7, QFormLayout.FieldRole, self.spb_right_offset)
 

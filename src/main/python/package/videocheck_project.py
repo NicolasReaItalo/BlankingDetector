@@ -67,7 +67,7 @@ class VideoCheck():
     def analyse_video(self):
         if not self.is_video():
             return "Erreur : ce n'est pas un fichier video"
-
+        self.issue_list = []
         current_frame = 0
         command = ["ffmpeg",
                    '-i', self.video_path,  # fifo is the named pipe
@@ -115,7 +115,7 @@ class VideoCheck():
                         fontColor_ok,
                         lineType)
 
-            cv2.imshow(f'{os.path.basename(self.video_path)}: Analyse en cours... {self.x_res}x{self.y_res}  Appuyer sur q pour arreter',
+            cv2.imshow(f'{os.path.basename(self.video_path)}: Analyse en cours  Appuyer sur q pour arreter',
                        resized)
 
            ###  INSERER LE CODE DE VERIF ICI
@@ -193,13 +193,14 @@ class VideoCheck():
         ret= ''
         if len(self.issue_list) < 1:
             return "no issue detected :-)"
+        ret = ret + f' {len(self.issue_list)} issues found :-( \n\n'
         for issue in self.issue_list:
-            ret = ret + f'°  issue n° {i}\n'
-            ret = ret + f'start tc =  {timecode.frame_to_tc_02(issue.get("start_frm"),self.framerate)}\n'
-            ret = ret + f'end tc =  {timecode.frame_to_tc_02(issue.get("end_frm"),self.framerate)}\n'
-            ret = ret + f'position =  {issue.get("lines_detected")}\n'
+            ret = ret + f'°issue n° {i}\n'
+            ret = ret + f'  start tc =  {timecode.frame_to_tc_02(issue.get("start_frm"),self.framerate)}\n'
+            ret = ret + f'  end tc =  {timecode.frame_to_tc_02(issue.get("end_frm"),self.framerate)}\n'
+            ret = ret + f'  position =  {issue.get("lines_detected")}\n'
             ret = ret + "\n"
-            ret =ret + '    '
+           # ret =ret + '    '
             i+=1
 
         return ret

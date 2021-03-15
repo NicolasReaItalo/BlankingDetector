@@ -40,11 +40,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.project.video_path == '':
             self.alert('Choose a video file')
             return
-        #self.text_display.setPlainText(f' {os.path.basename(self.project.video_path)} \nAnalysis in progres \n Pres q to stop')
         self.project.analyse_video()
-        print(self.project.issue_list)
-        self.text_display.setPlainText(self.project.generate_header())
-        self.text_display.setPlainText(self.project.generate_report())
+        self.text_display.setPlainText( str(self.project.generate_header() + '\n\n'+self.project.generate_report()))
         self.text_display.repaint()
     def top_offset_changed(self):
         self.project.crop_top = self.spb_top_offset.value()

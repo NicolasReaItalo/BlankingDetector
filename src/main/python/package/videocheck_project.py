@@ -82,30 +82,38 @@ class VideoCheck():
         else:
             scale_factor = 4
 
-
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        UpLeftCornerOfText = (0, 50)
+        UpLeftCornerOfText_line2 = (0, 70)
+        fontScale = 0.5
+        fontColor_ok = (255, 255, 128)
+        fontColor_issue = (0, 0, 255)
+        lineType = 2
 
         while True:
             # Capture frame-by-frame
             raw_image = pipe.stdout.read(self.x_res * self.y_res * 3)
-            # transform the byte read into a numpy array
+
             image = numpy.frombuffer(raw_image, dtype='uint8')
-            image = image.reshape((self.y_res, self.x_res, 3))  # Notice how height is specified first and then width
-            resized = cv2.resize(image, (int(self.x_res / scale_factor), int(self.y_res / scale_factor)), 1, 1)
+            image = image.reshape((self.y_res, self.x_res, 3))
+            resized = cv2.resize(image, (self.x_res // scale_factor, self.y_res // scale_factor), 1, 1)
 
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            UpLeftCornerOfText = (0, 50)
-            fontScale = 1
-            fontColor = (255, 255, 255)
-            lineType = 2
+            percentage = (round(current_frame/self.end_frame,1))*100
 
-            cv2.putText(resized, f'{str(current_frame)}/{self.end_frame}',
+
+            cv2.putText(resized, f'image:{str(current_frame)} ',
                         UpLeftCornerOfText,
                         font,
                         fontScale,
-                        fontColor,
+                        fontColor_ok,
                         lineType)
 
-
+            cv2.putText(resized, f' {percentage} %',
+                        UpLeftCornerOfText_line2,
+                        font,
+                        fontScale,
+                        fontColor_ok,
+                        lineType)
 
             cv2.imshow(f'{os.path.basename(self.video_path)}: Analyse en cours... {self.x_res}x{self.y_res}  Appuyer sur q pour arreter',
                        resized)
@@ -171,9 +179,29 @@ class VideoCheck():
         self.framerate = self.get_framerate()
         self.end_frame = self.get_duration_frames()
         self.codec = self.get_codec()
-        return f" {os.path.basename(self.video_path)} \n {self.codec} \n {self.framerate} im.s \n {self.x_res}x{self.y_res} \n " \
-               f"Durée : { timecode.frame_to_tc_02(self.end_frame,self.framerate)}   / {self.end_frame} images "
+        return self.generate_header()
 
 
+    def generate_header(self):
+        return f"fichier: {os.path.basename(self.video_path)} \n {self.codec} \n cadence: {self.framerate} im.s \n resolution: {self.x_res}x{self.y_res} \n " \
+               f"Durée (h:m:s:i) : {timecode.frame_to_tc_02(self.end_frame, self.framerate)}   / {self.end_frame} images "
+
+
+
+    def generate_report(self):
+        i = 1
+        ret= ''
+        if len(self.issue_list) < 1:
+            return "no issue detected :-)"
+        for issue in self.issue_list:
+            ret = ret + f'°  issue n° {i}\n'
+            ret = ret + f'start tc =  {timecode.frame_to_tc_02(issue.get("start_frm"),self.framerate)}\n'
+            ret = ret + f'end tc =  {timecode.frame_to_tc_02(issue.get("end_frm"),self.framerate)}\n'
+            ret = ret + f'position =  {issue.get("lines_detected")}\n'
+            ret = ret + "\n"
+            ret =ret + '    '
+            i+=1
+
+        return ret
 
 

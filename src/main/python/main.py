@@ -27,7 +27,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.spb_treshold.valueChanged.connect(self.treshold_changed)
 
-        self.resize(700, 500)
+        self.resize(1000, 500)
         self.show()
 
     def press_file_button(self):
@@ -40,10 +40,12 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.project.video_path == '':
             self.alert('Choose a video file')
             return
-        self.text_display.setPlainText(f' {os.path.basename(self.project.video_path)} \nAnalysis in progres \n Pres q to stop')
+        #self.text_display.setPlainText(f' {os.path.basename(self.project.video_path)} \nAnalysis in progres \n Pres q to stop')
         self.project.analyse_video()
         print(self.project.issue_list)
-
+        self.text_display.setPlainText(self.project.generate_header())
+        self.text_display.setPlainText(self.project.generate_report())
+        self.text_display.repaint()
     def top_offset_changed(self):
         self.project.crop_top = self.spb_top_offset.value()
 

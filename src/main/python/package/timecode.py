@@ -11,7 +11,10 @@ def frame_to_tc(fn, framerate):
 def frame_to_tc_02(fn, framerate):
     ff = fn % framerate
     s = fn // framerate
-    return f"{int(s // 3600)}:{int(s // 60 % 60)}:{int(s % 60)}:{int(ff)}"
+    h= int(s // 3600)
+    m= int(s // 60 % 60)
+
+    return f"{h}:{m}:{int(s % 60)}:{int(ff)}"
 
 
 def tc_split(timecode):

@@ -31,6 +31,8 @@ class VideoCheck():
          self.last_frame_analysed = 0
          self.analyse_duration = ''
          self.tc_offset = 0
+         self.start_time = 0
+         self.elapsed_time = 0
 
 
     def get_resolution(self):
@@ -76,6 +78,7 @@ class VideoCheck():
             return "Erreur : ce n'est pas un fichier video"
         self.issue_list = []
         current_frame = 0
+        self.start_time = time.clock()
         command = ["ffmpeg",
                    '-i', self.video_path,  # fifo is the named pipe
                    '-pix_fmt', 'bgr24',  # opencv requires bgr24 pixel format.
@@ -108,9 +111,9 @@ class VideoCheck():
             resized = cv2.resize(image, (self.x_res // scale_factor, self.y_res // scale_factor), 1, 1)
 
 
-            self.write_on_image(resized,f'image:{str(current_frame)}',0.5,20,100)
-            self.write_on_image(resized,f'progression:{(round(current_frame/self.end_frame,1))*100} %',0.5,20,130)
-            self.write_on_image(resized,f'Time-Code:{timecode.frame_to_tc_02(current_frame,self.framerate)}',0.5,20,160)
+            self.write_on_image(resized,f'frame:{str(current_frame)}',0.5,20,40)
+            self.write_on_image(resized,f'progres:{(round(current_frame/self.end_frame,1))*100} %',0.5,20,70)
+            self.write_on_image(resized,f'Time-Code:{timecode.frame_to_tc_02(current_frame,self.framerate)}',0.5,20,100)
 
             cv2.imshow(f'{os.path.basename(self.video_path)}: Analyse en cours  Appuyer sur q pour arreter',
                        resized)
@@ -166,9 +169,11 @@ class VideoCheck():
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 self.last_frame_analysed = current_frame
+                self.elapsed_time = time.clock() - self.start_time
                 break
             if current_frame == self.end_frame:
                 self.complete = True
+                self.elapsed_time = time.clock() - self.start_time
                 break
         pipe.stdout.flush()
         cv2.destroyAllWindows()
@@ -219,7 +224,7 @@ class VideoCheck():
         filename = os.path.basename(self.video_path).split('.')[0]
         filename = filename + f'_{issue_number}.png'
         # write timecode on image
-        self.write_on_image(img,timecode.frame_to_tc_02(image_number,self.framerate),5,img.shape[1]//8,
+        self.write_on_image(img,timecode.frame_to_tc_02(image_number,self.framerate),2,img.shape[1]//8,
                             img.shape[0]//8)
         path = report_path + '/'+filename
         cv2.imwrite(filename=path,img=img)
@@ -263,10 +268,15 @@ class VideoCheck():
 
         if not self.complete:
             html_file = html_file + f'<div><p style ="font: 20px Helvetica, sans-serif;color:#BE1D11; text-align: center;">\
-                                      Alert : analysis not complete - Interrupted by user</p></div>'
+                                      Alert : analysis not complete - Interrupted by user \
+                                      at {timecode.frame_to_tc_02(self.last_frame_analysed,self.framerate)}</p></div>'
 
-        html_file = html_file + f'<div><p style="color: white;"> {self.end_frame} frames checked in xxxx minutes \
+        if self.issue_list != []:
+            html_file = html_file + f'<div><p style="color: white;"> {self.end_frame} frames checked in {self.elapsed_time} s \
                                 <p style="color: #BE1D11;"> {len(self.issue_list)} issues detected</p></p></div>'
+        else:
+            html_file = html_file + f'<div><p style="color: white;"> {self.end_frame} frames checked in {self.elapsed_time} s \
+                                            <p style="color: green;"> {len(self.issue_list)} issues detected</p></p></div>'
 
 
         html_file = html_file + f'<div><table><thead><tr><td class="issue-header">Snapshot</td>\

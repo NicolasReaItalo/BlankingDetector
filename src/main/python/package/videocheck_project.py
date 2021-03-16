@@ -96,36 +96,28 @@ class VideoCheck():
 
             image = numpy.frombuffer(raw_image, dtype='uint8')
             image = image.reshape((self.y_res, self.x_res, 3))
+
+            # resizing original image to show progress
             resized = cv2.resize(image, (self.x_res // scale_factor, self.y_res // scale_factor), 1, 1)
 
-            percentage = (round(current_frame/self.end_frame,1))*100
 
-
-            cv2.putText(resized, f'image:{str(current_frame)} ',
-                        UpLeftCornerOfText,
-                        font,
-                        fontScale,
-                        fontColor_ok,
-                        lineType)
-
-            cv2.putText(resized, f' {percentage} %',
-                        UpLeftCornerOfText_line2,
-                        font,
-                        fontScale,
-                        fontColor_ok,
-                        lineType)
+            self.write_on_image(resized,f'image:{str(current_frame)}',0.5,20,100)
+            self.write_on_image(resized,f'progression:{(round(current_frame/self.end_frame,1))*100} %',0.5,20,130)
+            self.write_on_image(resized,f'Time-Code:{timecode.frame_to_tc_02(current_frame,self.framerate)}',0.5,20,160)
 
             cv2.imshow(f'{os.path.basename(self.video_path)}: Analyse en cours  Appuyer sur q pour arreter',
                        resized)
 
-           ###  INSERER LE CODE DE VERIF ICI
+           # cropping the image to get the 4 exterior lines to check
 
             top_line = image[0 + self.crop_top:1+self.crop_top, 0 + self.crop_left :self.x_res - self.crop_right]
             bottom_line = image[self.y_res - 1-self.crop_bottom:self.y_res-self.crop_bottom, 0 + self.crop_left:self.x_res- self.crop_right]
             left_line = image[0 + self.crop_top :self.y_res - self.crop_bottom, 0 + self.crop_left:1 + self.crop_left]
             right_line = image[0 + self.crop_top:self.y_res - self.crop_bottom, self.x_res - 1 - self.crop_right:self.x_res- self.crop_right]
 
+
             black_lines_detected = []
+
             if numpy.max(top_line) <= self.treshold:
                 black_lines_detected.append('TOP')
             if numpy.max(bottom_line) <= self.treshold:
@@ -135,14 +127,16 @@ class VideoCheck():
             if numpy.max(right_line) <= self.treshold:
                 black_lines_detected.append('RIGHT')
 
-            if black_lines_detected != []:
-                if self.issue_list == []:
+            if black_lines_detected != []:  # black lines have been detected
+                if self.issue_list == []:  # self.issue_list list the dictionnaries with infos about the issue
                     self.issue_list.append({
                         'start_frm': current_frame,
                         'end_frm': current_frame,
                         'lines_detected': black_lines_detected[:]
 
                     })
+                    # first frame of first issue- save snapshot
+                    self.save_snapshot(image, len(self.issue_list),current_frame)
                 else:
                     if self.issue_list[-1].get('end_frm') == (current_frame - 1):  ## same issue on previous image
                         self.issue_list[-1]['end_frm'] = current_frame
@@ -157,6 +151,8 @@ class VideoCheck():
                             'lines_detected': black_lines_detected[:]
 
                         })
+                        # first frame of new issue- save snapshot
+                        self.save_snapshot(image,len(self.issue_list),current_frame)
 
 
             current_frame += 1
@@ -205,4 +201,28 @@ class VideoCheck():
 
         return ret
 
+    def save_snapshot(self,img,issue_number,image_number):
+        # temporaire
+        report_path = os.path.dirname(self.video_path)
+        report_path = report_path + '/report_snapshots'
+        if not os.path.isdir(report_path):
+            os.makedirs(report_path)
+
+        filename = os.path.basename(self.video_path).split('.')[0]
+        filename = filename + f'_{issue_number}.png'
+        # write timecode on image
+        self.write_on_image(img,timecode.frame_to_tc_02(image_number,self.framerate),10,2*img.shape[1]//3,
+                            img.shape[0]//2)
+        path = report_path + '/'+filename
+        cv2.imwrite(filename=path,img=img)
+        return
+
+
+    def write_on_image(self,image,content,size,x,y):
+        font = cv2.FONT_HERSHEY_TRIPLEX
+        position = (x,y)
+        fontScale = size
+        fontColor = (255, 255, 100)
+        lineType = 2
+        cv2.putText(image, content,position,font,fontScale,fontColor,lineType)
 

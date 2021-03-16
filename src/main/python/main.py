@@ -45,6 +45,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.project.analyse_video()
         self.text_display.setPlainText( str(self.project.generate_header() + '\n\n'+self.project.generate_report()))
         self.text_display.repaint()
+        self.project.generate_html_report()
     def top_offset_changed(self):
         self.project.crop_top = self.spb_top_offset.value()
 

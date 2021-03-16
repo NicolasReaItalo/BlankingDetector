@@ -1,6 +1,7 @@
 import cv2
 import subprocess as sp
 import numpy
+import time
 
 from package import timecode
 
@@ -25,6 +26,12 @@ class VideoCheck():
          self.start_frame = 0
          self.end_frame = 0
          self.treshold = 2
+         self.version_number = 0.5
+         self.complete = False
+         self.last_frame_analysed = 0
+         self.analyse_duration = ''
+         self.tc_offset = 0
+
 
     def get_resolution(self):
         if os.path.exists(self.video_path):
@@ -158,8 +165,10 @@ class VideoCheck():
             current_frame += 1
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
+                self.last_frame_analysed = current_frame
                 break
             if current_frame == self.end_frame:
+                self.complete = True
                 break
         pipe.stdout.flush()
         cv2.destroyAllWindows()
@@ -196,7 +205,6 @@ class VideoCheck():
             ret = ret + f'  end tc =  {timecode.frame_to_tc_02(issue.get("end_frm"),self.framerate)}\n'
             ret = ret + f'  position =  {issue.get("lines_detected")}\n'
             ret = ret + "\n"
-           # ret =ret + '    '
             i+=1
 
         return ret
@@ -211,18 +219,69 @@ class VideoCheck():
         filename = os.path.basename(self.video_path).split('.')[0]
         filename = filename + f'_{issue_number}.png'
         # write timecode on image
-        self.write_on_image(img,timecode.frame_to_tc_02(image_number,self.framerate),10,2*img.shape[1]//3,
-                            img.shape[0]//2)
+        self.write_on_image(img,timecode.frame_to_tc_02(image_number,self.framerate),5,img.shape[1]//8,
+                            img.shape[0]//8)
         path = report_path + '/'+filename
         cv2.imwrite(filename=path,img=img)
         return
 
 
     def write_on_image(self,image,content,size,x,y):
-        font = cv2.FONT_HERSHEY_TRIPLEX
+        font = cv2.FONT_HERSHEY_SIMPLEX
         position = (x,y)
         fontScale = size
-        fontColor = (255, 255, 100)
+        fontColor = (20, 20, 220)
         lineType = 2
         cv2.putText(image, content,position,font,fontScale,fontColor,lineType)
 
+
+    def generate_html_report(self):
+        file = os.path.basename(self.video_path).split('.')[0]
+        report_path = f'{self.video_path}_report.html'
+
+        html_file ='<!DOCTYPE html><html><head><meta charset="utf-8"><style type="text/css">@page {size: A4 portrait;}\
+        body {font: 20px Helvetica, sans-serif;color: #4d4d4d;background-color:  #4d4d4d;}h1 {font: 40px Helvetica,\
+        sans-serif;color: white;text-align: center;}p {text-align: center;}code {color: white;}div {\
+        background-color: #8c8c8c;width: 1000px;border: none;padding: 10px;\
+        margin: 20px;}table,td {table-layout: fixed;width: 235px;padding: 5px;}\
+        thead,tfoot {background-color: #8c8c8c;color: #4d4d4d;font: 20px Helvetica, sans-serif;text-align: center;}\
+        th{font: 25px Helvetica, sans-serif;color: #4d4d4d;padding: 15px;}tr {text-align: center;padding: 15px;}\
+        tr:nth-child(even) {background-color: #595959;color: #fff;}tr:nth-child(odd)  {background-color: #d9d9d9;\
+         color:#404040;}.img_thumbnail{width: 235px;}.issue-header {background-color: #8c8c8c;}\
+         .logo{align-content: center;width: 100px;}\
+         </style><title>Blanking detector Report</title></head><header><div>\
+         <img src="logo.png" class="logo"><h1>Blanking detection report<br></h1></div></header><body>'
+
+        html_file = html_file + f' <div>  <ul><li>file checked :  <code>{os.path.basename(self.video_path)}</code></li>\
+                                <li>date :  <code>01/02/2020</code></li>\
+                                <li>codec :  <code>{self.codec}</code></li>\
+                                <li>definition : <code>{self.x_res}x{self.y_res}</code></li>\
+                                <li>framerate : <code>{self.framerate}</code></li>\
+                                <li>starting timecode : <code>{timecode.frame_to_tc_02((self.start_frame+ self.tc_offset),self.framerate)}</code></li>\
+                                <li>Duration:  <code>{timecode.frame_to_tc_02(self.end_frame,self.framerate)}</code></li>\
+                                </ul></div>'
+
+        if not self.complete:
+            html_file = html_file + f'<div><p style ="font: 20px Helvetica, sans-serif;color:#BE1D11; text-align: center;">\
+                                      Alert : analysis not complete - Interrupted by user</p></div>'
+
+        html_file = html_file + f'<div><p style="color: white;"> {self.end_frame} frames checked in xxxx minutes \
+                                <p style="color: #BE1D11;"> {len(self.issue_list)} issues detected</p></p></div>'
+
+
+        html_file = html_file + f'<div><table><thead><tr><td class="issue-header">Snapshot</td>\
+                                <td class="issue-header">Issue type</td><td class="issue-header">Timecode(In/Out)</td>\
+                                <td class="issue-header">Details</td></tr></thead><tbody>'
+
+        for issue_number, issue in enumerate(self.issue_list, start=1):
+            snapshot_path = f'./report_snapshots/{os.path.basename(self.video_path).split(".")[0]}'+ f'_{issue_number}.png'
+            html_file = html_file + f' <tr><td><a href="{snapshot_path}"><img src="{snapshot_path}"class="img_thumbnail">\
+            </a></td><td>Black lines detected</td><td>{timecode.frame_to_tc_02(issue.get("start_frm"),self.framerate)}\
+            <br>{timecode.frame_to_tc_02(issue.get("end_frm"),self.framerate)}</td><td>{issue.get("lines_detected")}</td></tr>'
+
+        html_file = html_file + f'</tbody></table></div></body><footer></footer></html>'
+
+        report = open(report_path, "w")
+        report.write(html_file)
+        report.close()
+        return

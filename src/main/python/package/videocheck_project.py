@@ -8,6 +8,7 @@ from package import timecode
 from ffprobe import FFProbe
 
 import os
+import json
 
 class VideoCheck():
 
@@ -59,6 +60,17 @@ class VideoCheck():
             metadata = FFProbe(self.video_path)
             return metadata.streams[0].codec_description()
         return False
+
+    def get_timecode(self):
+        if os.path.exists(self.video_path):
+            stream = os.popen(f'ffprobe  -show_streams -print_format json {self.video_path}')
+            a = stream.read()
+            dict = json.loads(a)
+            tc = dict.get('streams')[-1].get('tags').get('timecode')
+            if not tc:
+                return timecode.tc_str_to_frames(tc,self.framerate)
+
+
 
 
 
@@ -189,6 +201,8 @@ class VideoCheck():
         self.framerate = self.get_framerate()
         self.end_frame = self.get_duration_frames()
         self.codec = self.get_codec()
+        self.tc_offset = self.get_timecode()
+
         return self.generate_header()
 
 
@@ -291,7 +305,9 @@ class VideoCheck():
 
         html_file = html_file + f'</tbody></table></div></body><footer></footer></html>'
 
-        report = open(report_path, "w")
-        report.write(html_file)
-        report.close()
+        with open(report_path, "w") as report:
+            report.write(html_file)
+            report.close()
         return
+
+

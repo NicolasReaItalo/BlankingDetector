@@ -23,6 +23,13 @@ def tc_split(timecode):
         return False
     return int(a[0]), int(a[1]),int(a[2]),int(a[3])
 
+def tc_str_to_frames(timecode, framerate):
+    a = timecode.split(':')
+    if len(a) < 4:
+        return False
+    return tc_to_frame(int(a[0]), int(a[1]), int(a[2]), int(a[3]), framerate)
+
+
 if __name__ == '__main__':
    print(frame_to_tc(2462, 24))
    print(tc_to_frame(hh =0,mm=0,ss=1,ff=0,frame_rate=24))

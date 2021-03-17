@@ -38,6 +38,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.text_display.setPlainText(res)
         self.text_display.repaint()
 
+
     def press_start_button(self):
         if self.project.video_path == '':
             self.alert('Choose a video file')

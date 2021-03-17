@@ -209,8 +209,9 @@ class VideoCheck():
 
 
     def generate_header(self):
-        return f"fichier: {os.path.basename(self.video_path)} \n {self.codec} \n cadence: {self.framerate} im.s \n resolution: {self.x_res}x{self.y_res} \n " \
-               f"Durée (h:m:s:i) : {timecode.frame_to_tc_02(self.end_frame, self.framerate)}   / {self.end_frame} images "
+        return f"filename: {os.path.basename(self.video_path)} \n {self.codec} \n framerate: {self.framerate} fps \n resolution(px): {self.x_res}x{self.y_res} \n " \
+               f"Duration (h:m:s:i) : {timecode.frame_to_tc_02(self.end_frame, self.framerate)}   / {self.end_frame} frames  \n starting timecode: {timecode.frame_to_tc_02((self.start_frame + self.tc_offset),self.framerate)}"
+
 
 
 

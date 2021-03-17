@@ -127,7 +127,7 @@ class VideoCheck():
 
             self.write_on_image(resized,f'frame:{str(current_frame)}',0.5,20,40)
             self.write_on_image(resized,f'progres:{(round(current_frame/self.end_frame,1))*100} %',0.5,20,70)
-            self.write_on_image(resized,f'Time-Code:{timecode.frame_to_tc_02(current_frame,self.framerate)}',0.5,20,100)
+            self.write_on_image(resized,f'Time-Code:{timecode.frame_to_tc_02((current_frame + self.tc_offset),self.framerate)}',0.5,20,100)
 
             cv2.imshow(f'{os.path.basename(self.video_path)}: Analyse en cours  Appuyer sur q pour arreter',
                        resized)
@@ -222,8 +222,8 @@ class VideoCheck():
         ret = ret + f' {len(self.issue_list)} issues found :-( \n\n'
         for issue in self.issue_list:
             ret = ret + f'°issue n° {i}\n'
-            ret = ret + f'  start tc =  {timecode.frame_to_tc_02(issue.get("start_frm"),self.framerate)}\n'
-            ret = ret + f'  end tc =  {timecode.frame_to_tc_02(issue.get("end_frm"),self.framerate)}\n'
+            ret = ret + f'  start tc =  {timecode.frame_to_tc_02((issue.get("start_frm") +self.tc_offset),self.framerate)}\n'
+            ret = ret + f'  end tc =  {timecode.frame_to_tc_02((issue.get("end_frm")+self.tc_offset),self.framerate)}\n'
             ret = ret + f'  position =  {issue.get("lines_detected")}\n'
             ret = ret + "\n"
             i+=1
@@ -240,8 +240,8 @@ class VideoCheck():
         filename = os.path.basename(self.video_path).split('.')[0]
         filename = filename + f'_{issue_number}.png'
         # write timecode on image
-        self.write_on_image(img,timecode.frame_to_tc_02(image_number,self.framerate),2,img.shape[1]//8,
-                            img.shape[0]//8)
+        self.write_on_image(img,timecode.frame_to_tc_02((image_number + self.tc_offset),self.framerate),1,img.shape[1]//10,
+                            img.shape[0]//10)
         path = report_path + '/'+filename
         cv2.imwrite(filename=path,img=img)
         return
@@ -279,7 +279,7 @@ class VideoCheck():
                                 <li>definition : <code>{self.x_res}x{self.y_res}</code></li>\
                                 <li>framerate : <code>{self.framerate}</code></li>\
                                 <li>starting timecode : <code>{timecode.frame_to_tc_02((self.start_frame+ self.tc_offset),self.framerate)}</code></li>\
-                                <li>Duration:  <code>{timecode.frame_to_tc_02(self.end_frame,self.framerate)}</code></li>\
+                                <li>Duration:  <code>{timecode.frame_to_tc_02((self.end_frame),self.framerate)}</code></li>\
                                 </ul></div>'
 
         if not self.complete:
@@ -302,8 +302,8 @@ class VideoCheck():
         for issue_number, issue in enumerate(self.issue_list, start=1):
             snapshot_path = f'./report_snapshots/{os.path.basename(self.video_path).split(".")[0]}'+ f'_{issue_number}.png'
             html_file = html_file + f' <tr><td><a href="{snapshot_path}"><img src="{snapshot_path}"class="img_thumbnail">\
-            </a></td><td>Black lines detected</td><td>{timecode.frame_to_tc_02(issue.get("start_frm"),self.framerate)}\
-            <br>{timecode.frame_to_tc_02(issue.get("end_frm"),self.framerate)}</td><td>{issue.get("lines_detected")}</td></tr>'
+            </a></td><td>Black lines detected</td><td>{timecode.frame_to_tc_02((issue.get("start_frm") + self.tc_offset) ,self.framerate)}\
+            <br>{timecode.frame_to_tc_02((issue.get("end_frm") + self.tc_offset),self.framerate)}</td><td>{issue.get("lines_detected")}</td></tr>'
 
         html_file = html_file + f'</tbody></table></div></body><footer></footer></html>'
 

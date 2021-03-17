@@ -9,6 +9,7 @@ from ffprobe import FFProbe
 
 import os
 import json
+import datetime
 
 class VideoCheck():
 
@@ -233,17 +234,17 @@ class VideoCheck():
 
     def save_snapshot(self,img,issue_number,image_number):
         # temporaire
-        report_path = os.path.dirname(self.video_path)
-        report_path = report_path + '/report_snapshots'
-        if not os.path.isdir(report_path):
-            os.makedirs(report_path)
+
+        snapshot_path = self.report_path + '/report_snapshots'
+        if not os.path.isdir(snapshot_path):
+            os.makedirs(snapshot_path)
 
         filename = os.path.basename(self.video_path).split('.')[0]
         filename = filename + f'_{issue_number}.png'
         # write timecode on image
         self.write_on_image(img,timecode.frame_to_tc_02((image_number + self.tc_offset),self.framerate),1,img.shape[1]//10,
                             img.shape[0]//10)
-        path = report_path + '/'+filename
+        path = snapshot_path + '/'+filename
         cv2.imwrite(filename=path,img=img)
         return
 
@@ -259,7 +260,8 @@ class VideoCheck():
 
     def generate_html_report(self):
         file = os.path.basename(self.video_path).split('.')[0]
-        report_path = f'{self.video_path}_report.html'
+        report_path = f'{self.report_path}/{file}_report.html'
+        print(report_path)
 
         html_file ='<!DOCTYPE html><html><head><meta charset="utf-8"><style type="text/css">@page {size: A4 portrait;}\
         body {font: 20px Helvetica, sans-serif;color: #4d4d4d;background-color:  #4d4d4d;}h1 {font: 40px Helvetica,\
@@ -272,10 +274,10 @@ class VideoCheck():
          color:#404040;}.img_thumbnail{width: 235px;}.issue-header {background-color: #8c8c8c;}\
          .logo{align-content: center;width: 100px;}\
          </style><title>Blanking detector Report</title></head><header><div>\
-         <img src="logo.png" class="logo"><h1>Blanking detection report<br></h1></div></header><body>'
+         <h1>Blanking detection report<br></h1></div></header><body>'
 
         html_file = html_file + f' <div>  <ul><li>file checked :  <code>{os.path.basename(self.video_path)}</code></li>\
-                                <li>date :  <code>01/02/2020</code></li>\
+                                <li>date :  <code>{datetime.datetime.now()}</code></li>\
                                 <li>codec :  <code>{self.codec}</code></li>\
                                 <li>definition : <code>{self.x_res}x{self.y_res}</code></li>\
                                 <li>framerate : <code>{self.framerate}</code></li>\

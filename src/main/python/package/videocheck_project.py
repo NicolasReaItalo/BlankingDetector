@@ -68,7 +68,9 @@ class VideoCheck():
             dict = json.loads(a)
             tc = dict.get('streams')[-1].get('tags').get('timecode')
             if not tc:
-                return timecode.tc_str_to_frames(tc,self.framerate)
+                print('impossible d elire le tc')
+                return 0
+        return timecode.tc_str_to_frames(tc,self.framerate)
 
 
 

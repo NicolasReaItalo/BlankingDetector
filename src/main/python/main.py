@@ -19,6 +19,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         # BOUTONS
         self.btn_import_video.clicked.connect(self.press_file_button)
         self.btn_start.clicked.connect(self.press_start_button)
+        self.btn_report.clicked.connect(self.press_directory_button)
         # SpinBoxes
         self.spb_top_offset.valueChanged.connect(self.top_offset_changed)
         self.spb_bottom_offset.valueChanged.connect(self.bottom_offset_changed)
@@ -43,10 +44,20 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.project.video_path == '':
             self.alert('Choose a video file')
             return
+        if self.project.report_path == '':
+            self.alert('Choose folder to create report')
+            return
+
         self.project.analyse_video()
         self.text_display.setPlainText( str(self.project.generate_header() + '\n\n'+self.project.generate_report()))
         self.text_display.repaint()
         self.project.generate_html_report()
+
+    def press_directory_button(self):
+        folderpath = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
+        if folderpath:
+            self.project.report_path = folderpath
+
     def top_offset_changed(self):
         self.project.crop_top = self.spb_top_offset.value()
 

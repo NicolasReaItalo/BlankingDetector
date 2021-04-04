@@ -1,0 +1,17 @@
+coucou
+
+<input id="input">TOUCH ME</button>
+<button onclick="CLICK()">TOUCH ME</button>
+
+<script>
+    function CLICK(msg) {
+        let value = document.querySelector("#input").value;
+        var socket = new WebSocket("ws://localhost:8765");
+        socket.onopen = () => {
+            socket.send(value)
+        }
+        socket.onmessage = (msg) => {
+            console.log(msg)
+        }
+    }
+</script>

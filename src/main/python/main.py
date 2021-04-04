@@ -33,12 +33,14 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def press_file_button(self):
         path = str(QtWidgets.QFileDialog.getOpenFileName()[0])
+        mon_vrai_press()
+
+    def mon_vrai_press(self, path):
         res = self.project.load_video_file(path)
         if not res:
             print('error ffprobe')
         self.text_display.setPlainText(res)
         self.text_display.repaint()
-
 
     def press_start_button(self):
         if self.project.video_path == '':

@@ -1128,7 +1128,7 @@ class Ui_MainWindow(object):
         self.spb_treshold = QSpinBox(self.centralwidget)
         self.spb_treshold.setObjectName(u"spb_treshold")
         self.spb_treshold.setAlignment(Qt.AlignCenter)
-        self.spb_treshold.setValue(2)
+        self.spb_treshold.setValue(8)
 
         self.formLayout.setWidget(9, QFormLayout.FieldRole, self.spb_treshold)
 
@@ -1183,7 +1183,7 @@ class Ui_MainWindow(object):
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Left Offset in pixel", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Right Offset in pixel", None))
         self.label_8.setText("")
-        self.label_6.setText(QCoreApplication.translate("MainWindow", u"Treshold ( recommended 2)", None))
+        self.label_6.setText(QCoreApplication.translate("MainWindow", u"Treshold ( recommended 8)", None))
         self.label_9.setText("")
         self.btn_report.setText(QCoreApplication.translate("MainWindow", u"Report directory", None))
         self.btn_start.setText(QCoreApplication.translate("MainWindow", u"START !", None))

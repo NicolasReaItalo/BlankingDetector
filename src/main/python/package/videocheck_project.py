@@ -11,6 +11,9 @@ import os
 import json
 import datetime
 
+
+from matplotlib import pyplot as plt
+
 class VideoCheck():
 
     def __init__(self):
@@ -57,12 +60,16 @@ class VideoCheck():
 
 
     def get_codec(self):
+        '''return the codec of the video referenced in self.video_path
+                return False is no file is found'''
         if os.path.exists(self.video_path):
             metadata = FFProbe(self.video_path)
             return metadata.streams[0].codec_description()
         return False
 
     def get_timecode(self):
+        '''return the starting tc of the video referenced in self.video_path
+        return False is no file is found'''
         if os.path.exists(self.video_path):
             stream = os.popen(f'ffprobe  -show_streams -print_format json {self.video_path}')
             a = stream.read()
@@ -71,7 +78,8 @@ class VideoCheck():
             if not tc:
                 print('impossible d elire le tc')
                 return 0
-        return timecode.tc_str_to_frames(tc,self.framerate)
+            return timecode.tc_str_to_frames(tc,self.framerate)
+        return False
 
 
 
@@ -115,6 +123,10 @@ class VideoCheck():
         fontColor_issue = (0, 0, 255)
         lineType = 2
 
+        left_max_values = []
+        left_min_values = []
+        left_std_values = []
+
         while True:
             # Capture frame-by-frame
             raw_image = pipe.stdout.read(self.x_res * self.y_res * 3)
@@ -135,10 +147,20 @@ class VideoCheck():
 
            # cropping the image to get the 4 exterior lines to check
 
-            top_line = image[0 + self.crop_top:1+self.crop_top, 0 + self.crop_left :self.x_res - self.crop_right]
+            top_line = image[0 + self.crop_top:1+self.crop_top, 0 + self.crop_left:self.x_res - self.crop_right]
             bottom_line = image[self.y_res - 1-self.crop_bottom:self.y_res-self.crop_bottom, 0 + self.crop_left:self.x_res- self.crop_right]
             left_line = image[0 + self.crop_top :self.y_res - self.crop_bottom, 0 + self.crop_left:1 + self.crop_left]
             right_line = image[0 + self.crop_top:self.y_res - self.crop_bottom, self.x_res - 1 - self.crop_right:self.x_res- self.crop_right]
+
+###  TEST
+            print(current_frame,':',numpy.min(left_line),numpy.max(left_line),numpy.std(left_line))
+            self.save_histogram(image,current_frame)
+
+            #left_max_values.append(numpy.max(right_line))
+            #left_min_values.append(numpy.min(right_line))
+            #left_std_values.append(numpy.std(right_line))
+###  TEST
+
 
 
             black_lines_detected = []
@@ -151,9 +173,8 @@ class VideoCheck():
                 black_lines_detected.append('LEFT')
             if numpy.max(right_line) <= self.treshold:
                 black_lines_detected.append('RIGHT')
-
             if black_lines_detected != []:  # black lines have been detected
-                if self.issue_list == []:  # self.issue_list list the dictionnaries with infos about the issue
+                if self.issue_list == []:  # self.issue_list list the dictionaries with infos about the issue
                     self.issue_list.append({
                         'start_frm': current_frame,
                         'end_frm': current_frame,
@@ -163,7 +184,8 @@ class VideoCheck():
                     # first frame of first issue- save snapshot
                     self.save_snapshot(image, len(self.issue_list),current_frame)
                 else:
-                    if self.issue_list[-1].get('end_frm') == (current_frame - 1):  ## same issue on previous image
+                    previous_frames = [current_frame-1,current_frame-2,current_frame-3]
+                    if self.issue_list[-1].get('end_frm') in previous_frames: ## same issue on previous images
                         self.issue_list[-1]['end_frm'] = current_frame
                         for item in black_lines_detected:
                             if item not in self.issue_list[-1]['lines_detected']:
@@ -192,7 +214,10 @@ class VideoCheck():
                 break
         pipe.stdout.flush()
         cv2.destroyAllWindows()
-
+        print(range(self.end_frame))
+       # plt.plot(list(range(self.end_frame)),left_max_values,list(range(self.end_frame)),left_min_values)
+       # plt.plot(list(range(self.end_frame)),left_std_values)
+      #  plt.show()
 
     def load_video_file(self, path):
         self.video_path = path
@@ -214,6 +239,19 @@ class VideoCheck():
                f"Duration (h:m:s:i) : {timecode.frame_to_tc_02(self.end_frame, self.framerate)}   / {self.end_frame} frames  \n starting timecode: {timecode.frame_to_tc_02((self.start_frame + self.tc_offset),self.framerate)}"
 
 
+    def save_histogram(self, image, frm_number):
+        image_nb = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        test = numpy.histogram(image)
+        hist_path = self.report_path + '/report_snapshots'
+        if not os.path.isdir(hist_path):
+            os.makedirs(hist_path)
+        plt.plot(image_nb)
+        plt.xlabel(f"{frm_number}")
+        plt.show()
+        #plt.savefig(f'{hist_path}/hist_{frm_number}.png')
+        return
+
+
 
 
     def generate_report(self):
@@ -233,8 +271,6 @@ class VideoCheck():
         return ret
 
     def save_snapshot(self,img,issue_number,image_number):
-        # temporaire
-
         snapshot_path = self.report_path + '/report_snapshots'
         if not os.path.isdir(snapshot_path):
             os.makedirs(snapshot_path)
